@@ -1,0 +1,13 @@
+-- Manual seed snippets for local development only.
+-- Replace the placeholder UUID with an existing public.profiles.id before running.
+--
+-- insert into public.reminder_definitions (user_id, reminder_type, local_time, day_of_week)
+-- values
+--   ('00000000-0000-0000-0000-000000000000', 'evening_planning', time '22:00', null),
+--   ('00000000-0000-0000-0000-000000000000', 'morning_check_in', time '09:00', null),
+--   ('00000000-0000-0000-0000-000000000000', 'weekly_reset', time '22:15', 5)
+-- on conflict (user_id, reminder_type) do update
+-- set
+--   local_time = excluded.local_time,
+--   day_of_week = excluded.day_of_week,
+--   enabled = true;

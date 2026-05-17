@@ -27,6 +27,30 @@ describe("parseCapture", () => {
     });
   });
 
+  it("parses a dated 24-hour time capture as an appointment", () => {
+    expect(parseCapture("Tuesday 16:30 dentist", "2026-05-17")).toEqual({
+      title: "dentist",
+      originalText: "Tuesday 16:30 dentist",
+      itemType: "appointment",
+      itemDate: "2026-05-19",
+      itemTime: "16:30",
+      block: "afternoon",
+      bucket: "weekly_spread",
+    });
+  });
+
+  it("does not treat invalid 24-hour times as appointment times", () => {
+    expect(parseCapture("Tuesday 25:00 impossible", "2026-05-17")).toEqual({
+      title: "25:00 impossible",
+      originalText: "Tuesday 25:00 impossible",
+      itemType: "task",
+      itemDate: "2026-05-19",
+      itemTime: null,
+      block: "unsorted",
+      bucket: "weekly_spread",
+    });
+  });
+
   it("keeps vague future captures in future notes without assigning a date", () => {
     expect(parseCapture("Renew passport next month", "2026-05-17")).toEqual({
       title: "Renew passport next month",

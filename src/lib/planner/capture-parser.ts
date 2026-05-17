@@ -5,7 +5,7 @@ import type { DayBlock, ParsedCapture } from "./types";
 
 const VAGUE_FUTURE_PATTERN = /\b(next month|someday|eventually)\b/i;
 const BLOCK_PATTERN = /\b(morning|afternoon|evening)\b/i;
-const TIME_PATTERN = /\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i;
+const TIME_PATTERN = /\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i;
 const WEEKDAYS = new Map([
   ["monday", 1],
   ["tuesday", 2],
@@ -51,12 +51,12 @@ export function parseCapture(text: string, baseDateISO: string): ParsedCapture {
     });
   }
 
-  const timeMatch = trimmedText.match(TIME_PATTERN);
-  const normalizedTime = timeMatch ? normalizeTime(timeMatch) : null;
+  const parsedTime = parseTime(trimmedText.match(TIME_PATTERN));
+  const normalizedTime = parsedTime?.normalizedTime ?? null;
   const block = inferBlock(trimmedText, normalizedTime);
 
   return buildParsedCapture({
-    title: cleanTitle(trimmedText, dateMatch.token, timeMatch?.[0] ?? null),
+    title: cleanTitle(trimmedText, dateMatch.token, parsedTime?.token ?? null),
     originalText,
     itemType: normalizedTime ? "appointment" : "task",
     itemDate: dateMatch.dateISO,
@@ -101,11 +101,28 @@ function findDate(text: string, baseDateISO: string): DateMatch | null {
   return null;
 }
 
-function normalizeTime(match: RegExpMatchArray): string {
+function parseTime(match: RegExpMatchArray | null): { normalizedTime: string; token: string } | null {
+  if (!match) {
+    return null;
+  }
+
   const hourText = match[1];
   const minuteText = match[2] ?? "00";
-  const meridiem = match[3].toLowerCase();
+  const meridiem = match[3]?.toLowerCase() ?? null;
   let hour = Number(hourText);
+  const minute = Number(minuteText);
+
+  if (minute > 59) {
+    return null;
+  }
+
+  if (!meridiem && hour > 23) {
+    return null;
+  }
+
+  if (meridiem && (hour < 1 || hour > 12)) {
+    return null;
+  }
 
   if (meridiem === "pm" && hour !== 12) {
     hour += 12;
@@ -115,7 +132,10 @@ function normalizeTime(match: RegExpMatchArray): string {
     hour = 0;
   }
 
-  return `${hour.toString().padStart(2, "0")}:${minuteText}`;
+  return {
+    normalizedTime: `${hour.toString().padStart(2, "0")}:${minuteText}`,
+    token: match[0],
+  };
 }
 
 function inferBlock(text: string, normalizedTime: string | null): DayBlock {

@@ -13,8 +13,8 @@ create table public.telegram_links (
   user_id uuid not null unique references public.profiles(id) on delete cascade,
   telegram_chat_id bigint unique,
   telegram_user_id bigint unique,
-  status text not null default 'pending' check (status in ('pending', 'linked', 'revoked')),
-  code_hash text,
+  link_status text not null default 'pending' check (link_status in ('pending', 'linked', 'revoked')),
+  one_time_code_hash text,
   code_expires_at timestamptz,
   linked_at timestamptz,
   created_at timestamptz not null default now(),
@@ -41,7 +41,7 @@ create table public.weekly_notes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   week_start_date date not null,
-  note_text text not null default '',
+  content text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, week_start_date)
@@ -61,11 +61,13 @@ create table public.reminder_definitions (
 
 create table public.reminder_delivery_logs (
   id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
   reminder_definition_id uuid not null references public.reminder_definitions(id) on delete cascade,
   scheduled_for timestamptz not null,
   status text not null check (status in ('sent', 'failed', 'skipped')),
-  error_message text,
-  delivered_at timestamptz,
+  sent_at timestamptz,
+  failure_reason text,
+  telegram_message_id bigint,
   created_at timestamptz not null default now(),
   unique (reminder_definition_id, scheduled_for)
 );
@@ -173,11 +175,4 @@ create policy "reminder_definitions_manage_own"
 
 create policy "reminder_delivery_logs_select_own"
   on public.reminder_delivery_logs for select
-  using (
-    exists (
-      select 1
-      from public.reminder_definitions
-      where reminder_definitions.id = reminder_delivery_logs.reminder_definition_id
-        and reminder_definitions.user_id = auth.uid()
-    )
-  );
+  using (user_id = auth.uid());

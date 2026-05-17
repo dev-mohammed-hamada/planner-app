@@ -19,7 +19,7 @@ describe("saveParsedCapture", () => {
     const from = vi.fn().mockReturnValue({ insert });
     const supabase = { from };
 
-    await saveParsedCapture(supabase, "user-123", parsedAppointment);
+    await saveParsedCapture(supabase as never, "user-123", parsedAppointment);
 
     expect(from).toHaveBeenCalledWith("planner_items");
     expect(insert).toHaveBeenCalledWith({
@@ -41,6 +41,6 @@ describe("saveParsedCapture", () => {
     const from = vi.fn().mockReturnValue({ insert });
     const supabase = { from };
 
-    await expect(saveParsedCapture(supabase, "user-123", parsedAppointment)).rejects.toThrow(error);
+    await expect(saveParsedCapture(supabase as never, "user-123", parsedAppointment)).rejects.toThrow(error);
   });
 });

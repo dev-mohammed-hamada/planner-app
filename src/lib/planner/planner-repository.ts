@@ -1,26 +1,5 @@
 import type { ParsedCapture } from "@/lib/planner/types";
-
-type PlannerItemInsert = {
-  user_id: string;
-  title: string;
-  original_text: string;
-  item_type: ParsedCapture["itemType"];
-  item_date: string | null;
-  item_time: string | null;
-  block: ParsedCapture["block"];
-  bucket: ParsedCapture["bucket"];
-  source: "telegram";
-};
-
-type InsertResult = {
-  error: unknown;
-};
-
-export type SupabaseClient = {
-  from(table: "planner_items"): {
-    insert(payload: PlannerItemInsert): Promise<InsertResult> | InsertResult;
-  };
-};
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function saveParsedCapture(
   supabase: SupabaseClient,

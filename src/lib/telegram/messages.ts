@@ -2,8 +2,15 @@ export function unlinkedMessage(): string {
   return "Send your six-digit linking code from the app to connect Telegram.";
 }
 
-export function captureSavedMessage(): string {
-  return "Saved to your planner.";
+export function captureSavedMessage(count: number): string {
+  if (count <= 1) {
+    return "Saved to your planner.";
+  }
+  return `Saved ${count} items to your planner.`;
+}
+
+export function aiFailureMessage(): string {
+  return "AI parsing failed — saved to inbox. Open it to fix the date manually.";
 }
 
 export function linkedMessage(): string {

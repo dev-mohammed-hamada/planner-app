@@ -1,6 +1,8 @@
 import { TelegramLinkCard } from "@/components/settings/telegram-link-card";
 import { requireInvitedUser } from "@/lib/auth/guard";
 
+import { signOutAction } from "./logout-action";
+
 export const dynamic = "force-dynamic";
 
 type TelegramLink = {
@@ -66,6 +68,20 @@ export default async function SettingsPage() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="planner-paper-sheet planner-rule rounded-lg border shadow-sm shadow-stone-200/60">
+          <header className="planner-divider border-b px-4 py-3">
+            <h2 className="planner-ink text-base font-semibold">Account</h2>
+          </header>
+          <form action={signOutAction} className="px-4 py-4">
+            <button
+              className="planner-rule planner-ink rounded-md border bg-white px-4 py-2 text-sm font-semibold transition-colors hover:bg-[#f8faf9]"
+              type="submit"
+            >
+              Sign out
+            </button>
+          </form>
         </section>
       </div>
     </main>

@@ -46,3 +46,21 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Planner Setup
+
+1. Create a Supabase project.
+2. Copy `.env.example` to `.env.local`.
+3. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_SECRET_KEY`.
+4. Create a Telegram bot with BotFather and set `TELEGRAM_BOT_TOKEN`.
+5. Generate `TELEGRAM_WEBHOOK_SECRET` and `CRON_SECRET`.
+6. Deploy to Vercel.
+7. Set the Telegram webhook:
+
+```bash
+curl "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook" \
+  -d "url=$APP_URL/api/telegram/webhook" \
+  -d "secret_token=$TELEGRAM_WEBHOOK_SECRET"
+```
+
+8. Confirm Vercel Cron invokes `/api/cron/reminders` every five minutes.

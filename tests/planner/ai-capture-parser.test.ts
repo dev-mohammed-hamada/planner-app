@@ -4,28 +4,33 @@ import { AiParseError, aiParseCapture } from "@/lib/planner/ai-capture-parser";
 
 function buildClient(response: unknown) {
   return {
-    messages: {
-      create: vi.fn().mockResolvedValue(response),
+    chat: {
+      completions: {
+        create: vi.fn().mockResolvedValue(response),
+      },
     },
   };
 }
 
-function toolUseResponse(items: unknown) {
+function jsonResponse(items: unknown) {
   return {
-    content: [
+    choices: [
       {
-        type: "tool_use",
-        name: "extract_planner_items",
-        input: { items },
+        message: {
+          role: "assistant",
+          content: JSON.stringify({ items }),
+          refusal: null,
+        },
+        finish_reason: "stop",
       },
     ],
   };
 }
 
 describe("aiParseCapture", () => {
-  it("returns a single ParsedCapture for one-item tool output", async () => {
+  it("returns a single ParsedCapture for one-item structured output", async () => {
     const client = buildClient(
-      toolUseResponse([
+      jsonResponse([
         {
           title: "buy milk",
           item_type: "task",
@@ -50,12 +55,12 @@ describe("aiParseCapture", () => {
         bucket: "weekly_spread",
       },
     ]);
-    expect(client.messages.create).toHaveBeenCalledOnce();
+    expect(client.chat.completions.create).toHaveBeenCalledOnce();
   });
 
-  it("returns multiple ParsedCaptures when the tool emits multiple items", async () => {
+  it("returns multiple ParsedCaptures when the model emits multiple items", async () => {
     const client = buildClient(
-      toolUseResponse([
+      jsonResponse([
         {
           title: "buy milk",
           item_type: "task",
@@ -87,8 +92,10 @@ describe("aiParseCapture", () => {
 
   it("throws AiParseError when the API rejects", async () => {
     const client = {
-      messages: {
-        create: vi.fn().mockRejectedValue(new Error("network down")),
+      chat: {
+        completions: {
+          create: vi.fn().mockRejectedValue(new Error("network down")),
+        },
       },
     };
 
@@ -97,16 +104,31 @@ describe("aiParseCapture", () => {
     ).rejects.toBeInstanceOf(AiParseError);
   });
 
-  it("throws AiParseError when response has no tool_use block", async () => {
-    const client = buildClient({ content: [{ type: "text", text: "I cannot help." }] });
+  it("throws AiParseError when the model refuses", async () => {
+    const client = buildClient({
+      choices: [
+        {
+          message: { role: "assistant", content: null, refusal: "Cannot comply." },
+          finish_reason: "stop",
+        },
+      ],
+    });
 
     await expect(
       aiParseCapture("anything", "2026-05-18", { client: client as never }),
     ).rejects.toBeInstanceOf(AiParseError);
   });
 
-  it("throws AiParseError when tool input has zero items", async () => {
-    const client = buildClient(toolUseResponse([]));
+  it("throws AiParseError when the response has no parsable content", async () => {
+    const client = buildClient({ choices: [{ message: { role: "assistant", content: "not json" } }] });
+
+    await expect(
+      aiParseCapture("anything", "2026-05-18", { client: client as never }),
+    ).rejects.toBeInstanceOf(AiParseError);
+  });
+
+  it("throws AiParseError when the structured output has zero items", async () => {
+    const client = buildClient(jsonResponse([]));
 
     await expect(
       aiParseCapture("anything", "2026-05-18", { client: client as never }),
@@ -115,7 +137,7 @@ describe("aiParseCapture", () => {
 
   it("throws AiParseError when an item is missing required fields", async () => {
     const client = buildClient(
-      toolUseResponse([
+      jsonResponse([
         {
           title: "buy milk",
           // missing item_type and others
@@ -128,15 +150,15 @@ describe("aiParseCapture", () => {
     ).rejects.toBeInstanceOf(AiParseError);
   });
 
-  it("throws AiParseError when ANTHROPIC_API_KEY is missing and no client is supplied", async () => {
-    const previous = process.env.ANTHROPIC_API_KEY;
-    delete process.env.ANTHROPIC_API_KEY;
+  it("throws AiParseError when OPENAI_API_KEY is missing and no client is supplied", async () => {
+    const previous = process.env.OPENAI_API_KEY;
+    delete process.env.OPENAI_API_KEY;
 
     try {
       await expect(aiParseCapture("anything", "2026-05-18")).rejects.toBeInstanceOf(AiParseError);
     } finally {
       if (previous !== undefined) {
-        process.env.ANTHROPIC_API_KEY = previous;
+        process.env.OPENAI_API_KEY = previous;
       }
     }
   });

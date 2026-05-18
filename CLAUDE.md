@@ -42,7 +42,7 @@ Routing rules used by [capture-parser.ts](src/lib/planner/capture-parser.ts):
 - Has parsed date → `weekly_spread`
 - Otherwise → `inbox`
 
-`/planner` shows `weekly_spread` items for the current Saturday-anchored week. `/inbox` shows undated items. The orchestrator [src/lib/planner/capture.ts](src/lib/planner/capture.ts) runs the regex parser first and escalates to [src/lib/planner/ai-capture-parser.ts](src/lib/planner/ai-capture-parser.ts) (Claude Haiku) when the regex result lands in inbox or the message looks multi-item. See spec [docs/superpowers/specs/2026-05-18-ai-capture-parser-design.md](docs/superpowers/specs/2026-05-18-ai-capture-parser-design.md).
+`/planner` shows `weekly_spread` items for the current Saturday-anchored week. `/inbox` shows undated items. The orchestrator [src/lib/planner/capture.ts](src/lib/planner/capture.ts) runs the regex parser first and escalates to [src/lib/planner/ai-capture-parser.ts](src/lib/planner/ai-capture-parser.ts) (OpenAI `gpt-5-mini` with structured outputs) when the regex result lands in inbox or the message looks multi-item. See spec [docs/superpowers/specs/2026-05-18-ai-capture-parser-design.md](docs/superpowers/specs/2026-05-18-ai-capture-parser-design.md).
 
 ## Telegram capture
 
@@ -56,7 +56,7 @@ Required (in `.env`):
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`
 - `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`
 - `APP_URL`
-- `ANTHROPIC_API_KEY` (optional — disables AI parser escalation if absent)
+- `OPENAI_API_KEY` (optional — disables AI parser escalation if absent)
 
 Optional:
 - `CRON_SECRET` (production cron reminders)

@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { z } from "zod";
 
 import type { ParsedCapture } from "@/lib/planner/types";
@@ -13,8 +13,9 @@ export class AiParseError extends Error {
   }
 }
 
-const MODEL = "claude-haiku-4-5-20251001";
-const TIMEOUT_MS = 8000;
+const MODEL = "gpt-5-mini";
+const TIMEOUT_MS = 15000;
+const SCHEMA_NAME = "extract_planner_items";
 
 const itemSchema = z.object({
   title: z.string().min(1),
@@ -25,45 +26,44 @@ const itemSchema = z.object({
   bucket: z.enum(["weekly_spread", "inbox", "future_notes"]),
 });
 
-const toolInputSchema = z.object({
+const outputSchema = z.object({
   items: z.array(itemSchema).min(1),
 });
 
-const TOOL = {
-  name: "extract_planner_items",
-  description: "Extract one or more planner items from a natural-language capture.",
-  input_schema: {
-    type: "object",
-    properties: {
+const JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    items: {
+      type: "array",
       items: {
-        type: "array",
-        minItems: 1,
-        items: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            item_type: { type: "string", enum: ["task", "appointment", "note"] },
-            item_date: { type: ["string", "null"], description: "ISO date YYYY-MM-DD or null" },
-            item_time: { type: ["string", "null"], description: "HH:MM 24h or null" },
-            block: { type: "string", enum: ["morning", "afternoon", "evening", "unsorted", "none"] },
-            bucket: { type: "string", enum: ["weekly_spread", "inbox", "future_notes"] },
-          },
-          required: ["title", "item_type", "item_date", "item_time", "block", "bucket"],
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          item_type: { type: "string", enum: ["task", "appointment", "note"] },
+          item_date: { type: ["string", "null"], description: "ISO date YYYY-MM-DD or null" },
+          item_time: { type: ["string", "null"], description: "HH:MM 24h or null" },
+          block: { type: "string", enum: ["morning", "afternoon", "evening", "unsorted", "none"] },
+          bucket: { type: "string", enum: ["weekly_spread", "inbox", "future_notes"] },
         },
+        required: ["title", "item_type", "item_date", "item_time", "block", "bucket"],
+        additionalProperties: false,
       },
     },
-    required: ["items"],
   },
+  required: ["items"],
+  additionalProperties: false,
 } as const;
 
-type AnthropicClient = {
-  messages: {
-    create: (...args: unknown[]) => Promise<unknown>;
+type OpenAIClient = {
+  chat: {
+    completions: {
+      create: (...args: unknown[]) => Promise<unknown>;
+    };
   };
 };
 
 type AiParseOptions = {
-  client?: AnthropicClient;
+  client?: OpenAIClient;
   signal?: AbortSignal;
 };
 
@@ -75,16 +75,16 @@ function buildSystemPrompt(baseDateISO: string) {
     "If the message contains multiple separate plans, return them as separate items. Otherwise return one item.",
     "Use bucket weekly_spread for dated items, future_notes for vague-future intent (someday, eventually), and inbox for undated tasks. Use bucket inbox when in doubt.",
     "Use block morning, afternoon, or evening when a time of day is implied; unsorted for dated items without a clear time-of-day; none for inbox or future_notes items.",
-    "Always call the extract_planner_items tool exactly once.",
+    "Always return at least one item.",
   ].join(" ");
 }
 
-function defaultClient(): AnthropicClient {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+function defaultClient(): OpenAIClient {
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new AiParseError("ANTHROPIC_API_KEY is not set");
+    throw new AiParseError("OPENAI_API_KEY is not set");
   }
-  return new Anthropic({ apiKey }) as unknown as AnthropicClient;
+  return new OpenAI({ apiKey }) as unknown as OpenAIClient;
 }
 
 export async function aiParseCapture(
@@ -92,14 +92,14 @@ export async function aiParseCapture(
   baseDateISO: string,
   options: AiParseOptions = {},
 ): Promise<ParsedCapture[]> {
-  let client: AnthropicClient;
+  let client: OpenAIClient;
   try {
     client = options.client ?? defaultClient();
   } catch (err) {
     if (err instanceof AiParseError) {
       throw err;
     }
-    throw new AiParseError("Failed to construct Anthropic client", { cause: err });
+    throw new AiParseError("Failed to construct OpenAI client", { cause: err });
   }
 
   const controller = new AbortController();
@@ -108,40 +108,55 @@ export async function aiParseCapture(
 
   let response: unknown;
   try {
-    response = await client.messages.create(
+    response = await client.chat.completions.create(
       {
         model: MODEL,
-        max_tokens: 1024,
-        system: [
-          {
-            type: "text",
-            text: buildSystemPrompt(baseDateISO),
-            cache_control: { type: "ephemeral" },
-          },
+        max_completion_tokens: 1024,
+        messages: [
+          { role: "system", content: buildSystemPrompt(baseDateISO) },
+          { role: "user", content: text },
         ],
-        tools: [{ ...TOOL, cache_control: { type: "ephemeral" } }],
-        tool_choice: { type: "tool", name: TOOL.name },
-        messages: [{ role: "user", content: text }],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: SCHEMA_NAME,
+            strict: true,
+            schema: JSON_SCHEMA,
+          },
+        },
       },
       { signal: controller.signal },
     );
   } catch (err) {
-    throw new AiParseError("Anthropic API call failed", { cause: err });
+    throw new AiParseError("OpenAI API call failed", { cause: err });
   } finally {
     clearTimeout(timeout);
   }
 
-  const toolUse = extractToolUse(response);
-  if (!toolUse) {
-    throw new AiParseError("Anthropic response contained no tool_use block");
+  const message = extractMessage(response);
+  if (!message) {
+    throw new AiParseError("OpenAI response contained no message");
+  }
+  if (message.refusal) {
+    throw new AiParseError(`OpenAI refused the request: ${message.refusal}`);
+  }
+  if (!message.content) {
+    throw new AiParseError("OpenAI response had no content");
   }
 
-  const parsedInput = toolInputSchema.safeParse(toolUse);
-  if (!parsedInput.success) {
-    throw new AiParseError(`Tool input failed schema validation: ${parsedInput.error.message}`);
+  let json: unknown;
+  try {
+    json = JSON.parse(message.content);
+  } catch (err) {
+    throw new AiParseError("OpenAI response content was not valid JSON", { cause: err });
   }
 
-  return parsedInput.data.items.map((item) => ({
+  const parsed = outputSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new AiParseError(`Structured output failed schema validation: ${parsed.error.message}`);
+  }
+
+  return parsed.data.items.map((item) => ({
     title: item.title,
     originalText: text,
     itemType: item.item_type,
@@ -152,19 +167,16 @@ export async function aiParseCapture(
   }));
 }
 
-function extractToolUse(response: unknown): unknown {
+type Message = {
+  content?: string | null;
+  refusal?: string | null;
+};
+
+function extractMessage(response: unknown): Message | null {
   if (typeof response !== "object" || response === null) return null;
-  const content = (response as { content?: unknown }).content;
-  if (!Array.isArray(content)) return null;
-  for (const block of content) {
-    if (
-      typeof block === "object" &&
-      block !== null &&
-      (block as { type?: unknown }).type === "tool_use" &&
-      (block as { name?: unknown }).name === TOOL.name
-    ) {
-      return (block as { input?: unknown }).input;
-    }
-  }
-  return null;
+  const choices = (response as { choices?: unknown }).choices;
+  if (!Array.isArray(choices) || choices.length === 0) return null;
+  const message = (choices[0] as { message?: unknown }).message;
+  if (typeof message !== "object" || message === null) return null;
+  return message as Message;
 }

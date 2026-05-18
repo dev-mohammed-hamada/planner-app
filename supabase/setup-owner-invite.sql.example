@@ -1,0 +1,6 @@
+-- Replace this email with the first owner email before running in Supabase SQL editor.
+insert into public.auth_invites (email, active, expires_at)
+values ('you@example.com', true, null)
+on conflict (email) do update
+set active = excluded.active,
+    expires_at = excluded.expires_at;

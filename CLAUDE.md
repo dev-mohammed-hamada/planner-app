@@ -42,7 +42,7 @@ Routing rules used by [capture-parser.ts](src/lib/planner/capture-parser.ts):
 - Has parsed date → `weekly_spread`
 - Otherwise → `inbox`
 
-`/planner` shows `weekly_spread` items for the current Saturday-anchored week. `/inbox` shows undated items. The AI-augmented parser (see [docs/superpowers/specs/2026-05-18-ai-capture-parser-design.md](docs/superpowers/specs/2026-05-18-ai-capture-parser-design.md)) escalates ambiguous and multi-item messages to Claude Haiku.
+`/planner` shows `weekly_spread` items for the current Saturday-anchored week. `/inbox` shows undated items. The orchestrator [src/lib/planner/capture.ts](src/lib/planner/capture.ts) runs the regex parser first and escalates to [src/lib/planner/ai-capture-parser.ts](src/lib/planner/ai-capture-parser.ts) (Claude Haiku) when the regex result lands in inbox or the message looks multi-item. See spec [docs/superpowers/specs/2026-05-18-ai-capture-parser-design.md](docs/superpowers/specs/2026-05-18-ai-capture-parser-design.md).
 
 ## Telegram capture
 

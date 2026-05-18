@@ -56,6 +56,8 @@ describe("aiParseCapture", () => {
       },
     ]);
     expect(client.chat.completions.create).toHaveBeenCalledOnce();
+    const [requestBody] = client.chat.completions.create.mock.calls[0];
+    expect(requestBody.reasoning_effort).toBe("minimal");
   });
 
   it("returns multiple ParsedCaptures when the model emits multiple items", async () => {

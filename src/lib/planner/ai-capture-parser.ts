@@ -14,7 +14,7 @@ export class AiParseError extends Error {
 }
 
 const MODEL = "gpt-5-mini";
-const TIMEOUT_MS = 15000;
+const TIMEOUT_MS = 30000;
 const SCHEMA_NAME = "extract_planner_items";
 
 const itemSchema = z.object({
@@ -112,6 +112,7 @@ export async function aiParseCapture(
       {
         model: MODEL,
         max_completion_tokens: 1024,
+        reasoning_effort: "minimal",
         messages: [
           { role: "system", content: buildSystemPrompt(baseDateISO) },
           { role: "user", content: text },

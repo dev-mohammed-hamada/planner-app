@@ -1,6 +1,4 @@
-import { redirect } from "next/navigation";
-
-import { createClient } from "@/lib/supabase/server";
+import { requireInvitedUser } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 
@@ -25,14 +23,7 @@ function formatCreatedAt(createdAt: string) {
 }
 
 export default async function InboxPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login");
-  }
+  const { supabase, user } = await requireInvitedUser("/inbox");
 
   const { data: items } = await supabase
     .from("planner_items")

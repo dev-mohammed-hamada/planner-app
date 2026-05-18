@@ -1,7 +1,5 @@
-import { redirect } from "next/navigation";
-
 import { TelegramLinkCard } from "@/components/settings/telegram-link-card";
-import { createClient } from "@/lib/supabase/server";
+import { requireInvitedUser } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +24,7 @@ const defaultReminders = [
 ];
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login");
-  }
+  const { supabase, user } = await requireInvitedUser("/settings");
 
   const { data: telegramLink } = await supabase
     .from("telegram_links")

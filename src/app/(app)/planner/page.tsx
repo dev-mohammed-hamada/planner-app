@@ -1,10 +1,9 @@
 import { Temporal } from "@js-temporal/polyfill";
-import { redirect } from "next/navigation";
 
 import { WeeklySpread } from "@/components/planner/weekly-spread";
 import type { WeeklySpreadItem } from "@/components/planner/weekly-spread";
+import { requireInvitedUser } from "@/lib/auth/guard";
 import { getSaturdayWeekStart, todayInTimezone } from "@/lib/planner/dates";
-import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -13,14 +12,7 @@ function weekEndDate(weekStartDate: string) {
 }
 
 export default async function PlannerPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login");
-  }
+  const { supabase, user } = await requireInvitedUser("/planner");
 
   const { data: profile } = await supabase
     .from("profiles")

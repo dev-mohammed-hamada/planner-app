@@ -15,10 +15,31 @@ describe("UI primitives", () => {
     );
   });
 
+  it("renders icon and disabled button states", () => {
+    render(
+      <>
+        <Button aria-label="Add item" variant="icon">
+          +
+        </Button>
+        <Button disabled={true} variant="destructive">
+          Delete
+        </Button>
+      </>,
+    );
+
+    expect(screen.getByRole("button", { name: "Add item" })).toHaveClass(
+      "tm-button-icon",
+    );
+    expect(screen.getByRole("button", { name: "Delete" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Delete" })).toHaveClass(
+      "tm-button-disabled",
+    );
+  });
+
   it("renders labeled form fields", () => {
     render(
       <>
-        <TextField label="Email" name="email" type="email" />
+        <TextField className="custom-field" label="Email" name="email" type="email" />
         <SelectField label="Theme" name="theme">
           <option value="system">System</option>
         </SelectField>
@@ -26,6 +47,7 @@ describe("UI primitives", () => {
     );
 
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toHaveClass("tm-field", "custom-field");
     expect(screen.getByLabelText("Theme")).toBeInTheDocument();
   });
 
@@ -41,5 +63,22 @@ describe("UI primitives", () => {
     expect(screen.getByRole("heading", { name: "Display" })).toBeInTheDocument();
     expect(screen.getByText("Match the device setting.")).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "System theme" })).toBeChecked();
+  });
+
+  it("renders distinct checked and unchecked toggle visuals", () => {
+    render(
+      <>
+        <Toggle checked={false} label="Email alerts" name="email-alerts" />
+        <Toggle checked={true} label="Push alerts" name="push-alerts" />
+      </>,
+    );
+
+    const uncheckedToggle = screen.getByRole("switch", { name: "Email alerts" });
+    const checkedToggle = screen.getByRole("switch", { name: "Push alerts" });
+
+    expect(uncheckedToggle).not.toBeChecked();
+    expect(uncheckedToggle.nextElementSibling).not.toHaveClass("tm-toggle-checked");
+    expect(checkedToggle).toBeChecked();
+    expect(checkedToggle.nextElementSibling).toHaveClass("tm-toggle-checked");
   });
 });

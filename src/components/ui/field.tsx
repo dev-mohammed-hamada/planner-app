@@ -11,6 +11,7 @@ type BaseProps = {
 };
 
 export function TextField({
+  className = "",
   label,
   name,
   ...props
@@ -18,12 +19,13 @@ export function TextField({
   return (
     <label className="flex flex-col gap-2">
       <span className="text-sm font-medium text-[var(--tm-text)]">{label}</span>
-      <input className="tm-field" name={name} {...props} />
+      <input className={`tm-field ${className}`} name={name} {...props} />
     </label>
   );
 }
 
 export function TextareaField({
+  className = "",
   label,
   name,
   ...props
@@ -31,13 +33,18 @@ export function TextareaField({
   return (
     <label className="flex flex-col gap-2">
       <span className="text-sm font-medium text-[var(--tm-text)]">{label}</span>
-      <textarea className="tm-field min-h-28 resize-y" name={name} {...props} />
+      <textarea
+        className={`tm-field min-h-28 resize-y ${className}`}
+        name={name}
+        {...props}
+      />
     </label>
   );
 }
 
 export function SelectField({
   children,
+  className = "",
   label,
   name,
   ...props
@@ -45,7 +52,7 @@ export function SelectField({
   return (
     <label className="flex flex-col gap-2">
       <span className="text-sm font-medium text-[var(--tm-text)]">{label}</span>
-      <select className="tm-field" name={name} {...props}>
+      <select className={`tm-field ${className}`} name={name} {...props}>
         {children}
       </select>
     </label>

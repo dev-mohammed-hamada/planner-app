@@ -23,6 +23,23 @@ export function QuickAddModal() {
     }
   }, [state.message]);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   return (
     <>
       <button
@@ -53,6 +70,7 @@ export function QuickAddModal() {
                 </span>
                 <textarea
                   aria-label="Capture text"
+                  autoFocus
                   className="tm-field min-h-28 resize-y text-lg"
                   name="captureText"
                   placeholder="Review Q3 financials with Sarah @14:00 #tomorrow"

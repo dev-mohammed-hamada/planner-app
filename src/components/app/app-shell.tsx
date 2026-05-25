@@ -14,7 +14,6 @@ import { QuickAddModal } from "@/components/planner/quick-add-modal";
 
 type AppShellProps = {
   children: ReactNode;
-  quickAddSlot?: ReactNode;
 };
 
 const navItems = [
@@ -28,7 +27,7 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppShell({ children, quickAddSlot }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
   return (
@@ -78,7 +77,6 @@ export function AppShell({ children, quickAddSlot }: AppShellProps) {
           );
         })}
       </nav>
-      {quickAddSlot}
     </div>
   );
 }

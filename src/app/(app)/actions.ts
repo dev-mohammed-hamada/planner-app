@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { ZodError } from "zod";
 
 import { captureFromText } from "@/lib/planner/capture";
 import { todayInTimezone } from "@/lib/planner/dates";
@@ -10,11 +11,7 @@ import {
   type QuickAddOverrides,
 } from "@/lib/planner/quick-add-overrides";
 import { createClient } from "@/lib/supabase/server";
-import type {
-  DayBlock,
-  PlannerBucket,
-  PlannerItemType,
-} from "@/lib/planner/types";
+import type { DayBlock, PlannerBucket } from "@/lib/planner/types";
 
 export type QuickAddActionState = {
   message?: string;
@@ -73,14 +70,6 @@ function parseBucket(value: string): PlannerBucket | undefined {
   return undefined;
 }
 
-function parseItemType(value: string): PlannerItemType | undefined {
-  if (value === "task" || value === "appointment" || value === "note") {
-    return value;
-  }
-
-  return undefined;
-}
-
 function buildOverrides(formData: FormData): QuickAddOverrides {
   const overrides: QuickAddOverrides = {};
 
@@ -102,11 +91,6 @@ function buildOverrides(formData: FormData): QuickAddOverrides {
   const bucket = parseBucket(formValue(formData, "bucket"));
   if (bucket) {
     overrides.bucket = bucket;
-  }
-
-  const itemType = parseItemType(formValue(formData, "itemType"));
-  if (itemType) {
-    overrides.itemType = itemType;
   }
 
   return overrides;
@@ -156,7 +140,12 @@ export async function createQuickAddAction(
 
     return { message: "Saved to your planner." };
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to save capture.";
-    return { error: message };
+    if (err instanceof ZodError) {
+      const message = err.issues[0]?.message ?? "Please check your input.";
+      return { error: message };
+    }
+
+    console.error("createQuickAddAction failed:", err);
+    return { error: "Failed to save capture. Please try again." };
   }
 }

@@ -4,6 +4,8 @@ import { useActionState } from "react";
 
 import { requestMagicLinkAction } from "@/app/auth/login/actions";
 import type { MagicLinkActionState } from "@/app/auth/login/actions";
+import { Button } from "@/components/ui/button";
+import { TextField } from "@/components/ui/field";
 
 type MagicLinkLoginFormProps = {
   nextPath: string;
@@ -18,38 +20,34 @@ export function MagicLinkLoginForm({ nextPath }: MagicLinkLoginFormProps) {
   );
 
   return (
-    <form action={formAction} className="planner-paper-sheet planner-rule flex w-full max-w-md flex-col gap-4 rounded-lg border p-5 shadow-sm shadow-stone-200/60">
+    <form
+      action={formAction}
+      className="flex w-full max-w-md flex-col gap-4 rounded-lg border border-[var(--tm-border)] bg-[var(--tm-surface-lowest)] p-5 shadow-sm shadow-slate-200/70"
+    >
       <input type="hidden" name="next" value={nextPath} />
 
-      <label className="flex flex-col gap-2">
-        <span className="planner-ink text-sm font-medium">Email</span>
-        <input
-          className="planner-rule planner-ink rounded-md border bg-white px-3 py-2 text-base outline-none focus:border-[#397367]"
-          dir="auto"
-          name="email"
-          required
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-        />
-      </label>
+      <TextField
+        autoComplete="email"
+        dir="auto"
+        label="Email"
+        name="email"
+        placeholder="you@example.com"
+        required
+        type="email"
+      />
 
-      <button
-        className="rounded-md bg-[#397367] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#2f5f55] disabled:cursor-not-allowed disabled:bg-[#94a19b]"
-        disabled={isPending}
-        type="submit"
-      >
+      <Button className="w-full" disabled={isPending} type="submit" variant="primary">
         {isPending ? "Sending..." : "Send sign-in link"}
-      </button>
+      </Button>
 
       {state.message ? (
-        <p className="planner-ink-muted text-sm" role="status">
+        <p className="text-sm text-[var(--tm-text-muted)]" role="status">
           {state.message}
         </p>
       ) : null}
 
       {state.error ? (
-        <p className="planner-warn text-sm" role="alert">
+        <p className="text-sm text-[var(--tm-error)]" role="alert">
           {state.error}
         </p>
       ) : null}

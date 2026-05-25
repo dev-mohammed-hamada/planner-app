@@ -37,12 +37,17 @@ export function WeeklySpread({
 }: WeeklySpreadProps) {
   const weekDays = getWeekDays(weekStartDate);
 
+  const leftPage = weekDays.slice(0, 3);
+  const rightPage = weekDays.slice(3);
+
   return (
-    <main className="planner-paper min-h-screen px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-5">
+    <main className="min-h-screen bg-[var(--tm-paper-desk)] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-5">
         <header className="flex flex-col gap-1">
-          <p className="planner-accent text-sm font-semibold">Weekly Spread</p>
-          <h1 className="planner-ink text-2xl font-semibold tracking-normal">
+          <p className="text-sm font-semibold text-[var(--tm-secondary)]">
+            Weekly Spread
+          </p>
+          <h1 className="font-serif text-3xl font-semibold tracking-tight text-[var(--tm-text)]">
             Week of{" "}
             <time dateTime={weekStartDate}>
               {new Intl.DateTimeFormat("en", {
@@ -54,31 +59,49 @@ export function WeeklySpread({
           </h1>
         </header>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {weekDays.map((day) => (
-            <DaySection
-              dateISO={day.dateISO}
-              dayName={day.dayName}
-              items={items}
-              key={day.dateISO}
-            />
-          ))}
+        <div
+          className="mx-auto w-full max-w-[1400px] overflow-hidden rounded-xl bg-[var(--tm-rule)] shadow-[0_10px_25px_-5px_rgba(0,0,0,0.12)] lg:grid lg:grid-cols-2"
+          data-testid="notebook-spread"
+        >
+          <div className="flex flex-col gap-4 bg-gradient-to-r from-[var(--tm-paper)] to-[var(--tm-paper-deep)] p-5 lg:border-r lg:border-[var(--tm-rule-strong)]">
+            {leftPage.map((day) => (
+              <DaySection
+                dateISO={day.dateISO}
+                dayName={day.dayName}
+                items={items}
+                key={day.dateISO}
+              />
+            ))}
+          </div>
 
-          <section className="planner-paper-sheet planner-rule flex min-h-72 flex-col rounded-lg border shadow-sm shadow-stone-200/60 md:col-span-2 xl:col-span-1">
-            <header className="planner-divider border-b px-4 py-3">
-              <h2 className="planner-ink text-base font-semibold">
-                Weekly Notes
-              </h2>
-            </header>
-            <div
-              className="planner-ink min-h-52 whitespace-pre-wrap p-4 text-sm leading-6"
-              dir="auto"
-            >
-              {weeklyNote || (
-                <span className="planner-ink-faint">No notes yet.</span>
-              )}
-            </div>
-          </section>
+          <div className="flex flex-col gap-4 bg-gradient-to-l from-[var(--tm-paper)] to-[var(--tm-paper-deep)] p-5">
+            {rightPage.map((day) => (
+              <DaySection
+                dateISO={day.dateISO}
+                dayName={day.dayName}
+                items={items}
+                key={day.dateISO}
+              />
+            ))}
+
+            <section className="flex min-h-48 flex-col rounded-lg border border-[var(--tm-rule-strong)] bg-[var(--tm-paper-elevated)] shadow-sm">
+              <header className="border-b border-[var(--tm-rule)] px-4 py-3">
+                <h2 className="font-serif text-lg font-semibold text-[var(--tm-text)]">
+                  Weekly Notes
+                </h2>
+              </header>
+              <div
+                className="min-h-32 whitespace-pre-wrap p-4 text-sm leading-6 text-[var(--tm-text)]"
+                dir="auto"
+              >
+                {weeklyNote || (
+                  <span className="text-[var(--tm-text-muted)]">
+                    No notes yet.
+                  </span>
+                )}
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </main>

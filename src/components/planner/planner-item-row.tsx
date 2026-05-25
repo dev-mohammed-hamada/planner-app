@@ -45,19 +45,19 @@ export function PlannerItemRow({ item }: PlannerItemRowProps) {
   const time = formatTime(item.item_time);
 
   return (
-    <li className="min-h-8 py-1.5">
+    <li className="min-h-7 py-1">
       <div className="flex items-start gap-2">
         <form action={completePlannerItemAction} className="shrink-0">
           <input name="itemId" type="hidden" value={item.id} />
           <button
             aria-label={isCompleted ? "Item completed" : "Complete item"}
-            className="planner-ink-faint mt-0.5 inline-flex size-5 items-center justify-center rounded-sm hover:text-[#397367] disabled:opacity-70"
+            className="mt-0.5 inline-flex size-5 items-center justify-center rounded-sm text-[var(--tm-text-muted)] hover:text-[var(--tm-secondary)] disabled:opacity-70"
             disabled={isCompleted}
             type="submit"
           >
             {isCompleted ? (
               <IconSquareCheckFilled
-                className="planner-done size-4"
+                className="size-4 text-[var(--tm-secondary)]"
                 aria-hidden="true"
               />
             ) : (
@@ -67,7 +67,7 @@ export function PlannerItemRow({ item }: PlannerItemRowProps) {
         </form>
         {time ? (
           <time
-            className="planner-ink-faint w-12 shrink-0 pt-px text-xs font-medium tabular-nums"
+            className="w-12 shrink-0 pt-px text-xs font-semibold tabular-nums text-[var(--tm-secondary)]"
             dateTime={time}
           >
             {time}
@@ -81,8 +81,8 @@ export function PlannerItemRow({ item }: PlannerItemRowProps) {
           <input name="itemDate" type="hidden" value={item.item_date ?? ""} />
           <input
             aria-label="Item title"
-            className={`planner-ink min-w-0 rounded-sm bg-transparent px-1 py-0 text-sm leading-6 outline-none focus:bg-[#dfeee9] ${
-              isCompleted ? "planner-ink-faint line-through" : ""
+            className={`min-w-0 rounded-sm bg-transparent px-1 py-0 text-sm leading-6 text-[var(--tm-text)] outline-none focus:bg-[var(--tm-secondary-soft)] ${
+              isCompleted ? "text-[var(--tm-text-muted)] line-through" : ""
             }`}
             defaultValue={item.title}
             dir="auto"
@@ -90,7 +90,7 @@ export function PlannerItemRow({ item }: PlannerItemRowProps) {
           />
           <select
             aria-label="Move item"
-            className="planner-ink-muted h-7 rounded-sm bg-transparent text-xs outline-none focus:bg-[#dfeee9]"
+            className="h-7 rounded-sm bg-transparent text-xs text-[var(--tm-text-muted)] outline-none focus:bg-[var(--tm-secondary-soft)]"
             defaultValue={item.block}
             name="block"
           >
@@ -102,7 +102,7 @@ export function PlannerItemRow({ item }: PlannerItemRowProps) {
           </select>
           <button
             aria-label="Save item"
-            className="planner-accent inline-flex size-7 items-center justify-center rounded-sm hover:bg-[#dfeee9]"
+            className="inline-flex size-7 items-center justify-center rounded-sm text-[var(--tm-secondary)] hover:bg-[var(--tm-secondary-soft)]"
             type="submit"
           >
             <IconDeviceFloppy className="size-4" aria-hidden="true" />
@@ -112,7 +112,7 @@ export function PlannerItemRow({ item }: PlannerItemRowProps) {
           <input name="itemId" type="hidden" value={item.id} />
           <button
             aria-label="Delete item"
-            className="planner-ink-faint inline-flex size-7 items-center justify-center rounded-sm hover:text-[#8a5a44]"
+            className="inline-flex size-7 items-center justify-center rounded-sm text-[var(--tm-text-muted)] hover:text-[var(--tm-error)]"
             type="submit"
           >
             <IconTrash className="size-4" aria-hidden="true" />

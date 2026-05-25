@@ -43,6 +43,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
     .select("id,title,item_date,item_time,block,status")
     .eq("user_id", user.id)
     .eq("item_date", dateISO)
+    .eq("bucket", "weekly_spread")
     .neq("status", "deleted")
     .order("item_time", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true });

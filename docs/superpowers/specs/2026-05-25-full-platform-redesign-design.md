@@ -171,6 +171,8 @@ Existing tables remain valid:
 - `profiles`
 - `telegram_links`
 - `auth_invites`
+- `reminder_definitions`
+- `reminder_delivery_logs`
 
 New migrations are append-only.
 
@@ -190,7 +192,7 @@ Fields:
 
 ### Reminder Preferences
 
-`reminder_preferences` stores user-editable reminder settings.
+Existing `reminder_definitions` stores user-editable reminder settings. The redesign should use this table instead of creating a duplicate reminder preference table.
 
 Fields:
 
@@ -203,7 +205,7 @@ Fields:
 - `created_at`
 - `updated_at`
 
-Existing reminder delivery logic can read these settings once the preferences are implemented.
+Existing reminder delivery logic can continue to read these settings.
 
 ### Calendar Connections
 
@@ -331,4 +333,3 @@ These are intentionally outside the first redesign implementation:
 - Rich text editing.
 - Multi-user sharing.
 - Native mobile app behavior.
-

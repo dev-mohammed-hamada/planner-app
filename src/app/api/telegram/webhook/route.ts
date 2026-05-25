@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   try {
     const outcome = await captureFromText(text, baseDateISO);
     for (const item of outcome.items) {
-      await saveParsedCapture(supabase, linkedUser.user_id, item);
+      await saveParsedCapture(supabase, linkedUser.user_id, item, "telegram");
     }
     await sendTelegramMessage(chatId, captureSavedMessage(outcome.items.length));
   } catch (err) {
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       throw err;
     }
     const fallback = parseCapture(text, baseDateISO);
-    await saveParsedCapture(supabase, linkedUser.user_id, fallback);
+    await saveParsedCapture(supabase, linkedUser.user_id, fallback, "telegram");
     await sendTelegramMessage(chatId, aiFailureMessage());
   }
 

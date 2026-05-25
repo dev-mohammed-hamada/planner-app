@@ -7,9 +7,10 @@ import {
   IconCalendar,
   IconCalendarWeek,
   IconNotes,
-  IconPlus,
   IconSettings,
 } from "@tabler/icons-react";
+
+import { QuickAddModal } from "@/components/planner/quick-add-modal";
 
 type AppShellProps = {
   children: ReactNode;
@@ -52,10 +53,7 @@ export function AppShell({ children, quickAddSlot }: AppShellProps) {
             );
           })}
         </nav>
-        <button className="tm-button tm-button-primary" type="button">
-          <IconPlus aria-hidden="true" className="size-4" />
-          Quick add
-        </button>
+        <QuickAddModal />
       </header>
       <div className="pb-20 md:pb-0">{children}</div>
       <nav aria-label="Mobile primary" className="tm-mobile-nav">

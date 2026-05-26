@@ -5,7 +5,7 @@ import { createNote, listNoteCollections } from "@/lib/notes/notes-repository";
 describe("notes repository", () => {
   it("lists note collections for the user", async () => {
     const order = vi.fn().mockResolvedValue({
-      data: [{ id: "collection-1", name: "Ideas", sort_order: 0 }],
+      data: [{ id: "11111111-1111-4111-8111-111111111111", name: "Ideas", sort_order: 0 }],
       error: null,
     });
     const eq = vi.fn().mockReturnValue({ order });
@@ -15,7 +15,7 @@ describe("notes repository", () => {
     const result = await listNoteCollections({ from } as never, "user-123");
 
     expect(from).toHaveBeenCalledWith("note_collections");
-    expect(result).toEqual([{ id: "collection-1", name: "Ideas", sort_order: 0 }]);
+    expect(result).toEqual([{ id: "11111111-1111-4111-8111-111111111111", name: "Ideas", sort_order: 0 }]);
   });
 
   it("creates active notes in a collection", async () => {
@@ -23,14 +23,14 @@ describe("notes repository", () => {
     const from = vi.fn().mockReturnValue({ insert });
 
     await createNote({ from } as never, "user-123", {
-      collection_id: "collection-1",
+      collection_id: "11111111-1111-4111-8111-111111111111",
       content: "Write launch notes.",
       title: "Launch",
     });
 
     expect(from).toHaveBeenCalledWith("notes");
     expect(insert).toHaveBeenCalledWith({
-      collection_id: "collection-1",
+      collection_id: "11111111-1111-4111-8111-111111111111",
       content: "Write launch notes.",
       status: "active",
       title: "Launch",

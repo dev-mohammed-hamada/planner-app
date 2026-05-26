@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
 const createNoteSchema = z.object({
-  collection_id: z.string().nullable(),
+  collection_id: z.string().uuid().nullable(),
   content: z.string(),
   title: z.string().min(1),
 });

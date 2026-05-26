@@ -7,6 +7,8 @@ import {
   requestTelegramLinkCode,
   type TelegramLinkActionState,
 } from "@/app/(app)/settings/actions";
+import { Button } from "@/components/ui/button";
+import { Section, SectionRow } from "@/components/ui/section";
 
 type TelegramLinkCardProps = {
   status: "pending" | "linked" | "revoked" | null;
@@ -54,55 +56,70 @@ export function TelegramLinkCard({
   const isLinked = status === "linked";
 
   return (
-    <section className="planner-paper-sheet planner-rule rounded-lg border shadow-sm shadow-stone-200/60">
-      <div className="planner-divider flex flex-col gap-3 border-b px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <Section title="Telegram">
+      <SectionRow
+        title="Bot connection"
+        description={statusLabel(status)}
+      >
         <div className="flex items-center gap-3">
-          <span className="planner-accent-bg planner-accent flex size-10 items-center justify-center rounded-full">
-            <IconBrandTelegram className="size-5" aria-hidden="true" />
-          </span>
-          <div>
-            <h2 className="planner-ink text-base font-semibold">Telegram</h2>
-            <p className="planner-ink-muted text-sm">{statusLabel(status)}</p>
-          </div>
-        </div>
-
-        <form action={formAction}>
-          <button
-            className="planner-accent-bg planner-accent inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold disabled:opacity-60"
-            disabled={isPending || isLinked}
-            type="submit"
+          <span
+            aria-hidden="true"
+            className="flex size-10 items-center justify-center rounded-full bg-[var(--tm-surface-low)] text-[var(--tm-primary)]"
           >
-            <IconRefresh className="size-4" aria-hidden="true" />
-            {isLinked ? "Linked" : isPending ? "Creating" : "Create one-time code"}
-          </button>
-        </form>
-      </div>
+            <IconBrandTelegram className="size-5" />
+          </span>
+          <form action={formAction}>
+            <Button
+              disabled={isPending || isLinked}
+              type="submit"
+              variant="primary"
+            >
+              <IconRefresh aria-hidden="true" className="size-4" />
+              <span className="ml-2">
+                {isLinked
+                  ? "Linked"
+                  : isPending
+                    ? "Creating"
+                    : "Create one-time code"}
+              </span>
+            </Button>
+          </form>
+        </div>
+      </SectionRow>
 
-      <div className="flex flex-col gap-3 px-4 py-4">
-        {expiry ? (
-          <p className="planner-ink-muted text-sm">Current code expires at {expiry}.</p>
-        ) : null}
+      {expiry || state.code || state.error ? (
+        <SectionRow
+          title="Latest code"
+          description={
+            expiry ? `Current code expires at ${expiry}.` : undefined
+          }
+        >
+          <div className="flex flex-col items-end gap-2">
+            {state.code ? (
+              <div className="rounded-md border border-[var(--tm-border)] bg-[var(--tm-surface-low)] px-4 py-3 text-right">
+                <p className="font-[var(--font-jetbrains-mono)] text-xs font-semibold uppercase tracking-[0.18em] text-[var(--tm-text-muted)]">
+                  One-time code
+                </p>
+                <p className="font-[var(--font-jetbrains-mono)] text-2xl font-semibold tracking-normal text-[var(--tm-text)]">
+                  {state.code}
+                </p>
+                <p className="mt-1 text-sm text-[var(--tm-text-muted)]">
+                  Send this code to the Telegram bot within 15 minutes.
+                </p>
+              </div>
+            ) : null}
 
-        {state.code ? (
-          <div className="planner-paper-soft planner-rule rounded-md border px-4 py-3">
-            <p className="planner-ink-muted text-xs font-semibold uppercase tracking-normal">
-              One-time code
-            </p>
-            <p className="planner-ink font-mono text-2xl font-semibold tracking-normal">
-              {state.code}
-            </p>
-            <p className="planner-ink-muted mt-1 text-sm">
-              Send this code to the Telegram bot within 15 minutes.
-            </p>
+            {state.error ? (
+              <p
+                className="text-sm text-[var(--tm-danger,#b91c1c)]"
+                role="alert"
+              >
+                {state.error}
+              </p>
+            ) : null}
           </div>
-        ) : null}
-
-        {state.error ? (
-          <p className="planner-warn text-sm" role="alert">
-            {state.error}
-          </p>
-        ) : null}
-      </div>
-    </section>
+        </SectionRow>
+      ) : null}
+    </Section>
   );
 }

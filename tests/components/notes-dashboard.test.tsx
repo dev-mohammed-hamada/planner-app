@@ -1,9 +1,13 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { NotesDashboard } from "@/components/notes/notes-dashboard";
 
 describe("NotesDashboard", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("renders future notes, inbox captures, and weekly note archive", () => {
     render(
       <NotesDashboard
@@ -35,5 +39,21 @@ describe("NotesDashboard", () => {
     expect(screen.getByText("Someday plan garden layout")).toBeInTheDocument();
     expect(screen.getByText("Buy printer ink")).toBeInTheDocument();
     expect(screen.getByText("Follow up with design agency.")).toBeInTheDocument();
+  });
+
+  it("renders note collections when provided", () => {
+    render(
+      <NotesDashboard
+        collections={[{ id: "collection-1", name: "Ideas", sort_order: 0 }]}
+        futureNotes={[]}
+        inboxItems={[]}
+        notes={[{ id: "note-1", title: "Launch", content: "Write launch notes.", collection_id: "collection-1" }]}
+        weeklyNotes={[]}
+      />,
+    );
+
+    expect(screen.getByText("Ideas")).toBeInTheDocument();
+    expect(screen.getByText("Launch")).toBeInTheDocument();
+    expect(screen.getByText("Write launch notes.")).toBeInTheDocument();
   });
 });

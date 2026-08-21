@@ -24,3 +24,18 @@ export function inferBlockFromHour(hour: number): DayBlock {
 export function todayInTimezone(timezone: string): string {
   return Temporal.Now.zonedDateTimeISO(timezone).toPlainDate().toString();
 }
+
+export function resolveWeekParam(
+  input: string | undefined,
+  today: string,
+): string {
+  if (!input) {
+    return getSaturdayWeekStart(today);
+  }
+
+  try {
+    return getSaturdayWeekStart(Temporal.PlainDate.from(input).toString());
+  } catch {
+    return getSaturdayWeekStart(today);
+  }
+}

@@ -2,11 +2,13 @@ import { Temporal } from "@js-temporal/polyfill";
 
 import { DaySection } from "./day-section";
 import type { DaySectionItem } from "./day-section";
+import { WeekNavigator } from "./week-navigator";
 
 export type WeeklySpreadItem = DaySectionItem;
 
 type WeeklySpreadProps = {
   weekStartDate: string;
+  currentWeekStartDate: string;
   items: WeeklySpreadItem[];
   weeklyNote: string;
 };
@@ -32,6 +34,7 @@ function getWeekDays(weekStartDate: string) {
 
 export function WeeklySpread({
   weekStartDate,
+  currentWeekStartDate,
   items,
   weeklyNote,
 }: WeeklySpreadProps) {
@@ -43,20 +46,27 @@ export function WeeklySpread({
   return (
     <main className="min-h-screen bg-[var(--tm-paper-desk)] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-5">
-        <header className="flex flex-col gap-1">
+        <header className="flex flex-col gap-2">
           <p className="text-sm font-semibold text-[var(--tm-secondary)]">
             Weekly Spread
           </p>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight text-[var(--tm-text)]">
-            Week of{" "}
-            <time dateTime={weekStartDate}>
-              {new Intl.DateTimeFormat("en", {
-                day: "numeric",
-                month: "long",
-                timeZone: "UTC",
-              }).format(new Date(`${weekStartDate}T00:00:00Z`))}
-            </time>
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="font-serif text-3xl font-semibold tracking-tight text-[var(--tm-text)]">
+              Week of{" "}
+              <time dateTime={weekStartDate}>
+                {new Intl.DateTimeFormat("en", {
+                  day: "numeric",
+                  month: "long",
+                  timeZone: "UTC",
+                }).format(new Date(`${weekStartDate}T00:00:00Z`))}
+              </time>
+            </h1>
+            <WeekNavigator
+              currentWeekStartDate={currentWeekStartDate}
+              variant="header"
+              weekStartDate={weekStartDate}
+            />
+          </div>
         </header>
 
         <div
@@ -103,6 +113,12 @@ export function WeeklySpread({
             </section>
           </div>
         </div>
+
+        <WeekNavigator
+          currentWeekStartDate={currentWeekStartDate}
+          variant="footer"
+          weekStartDate={weekStartDate}
+        />
       </div>
     </main>
   );

@@ -1,5 +1,14 @@
+import {
+  CalendarSettingsSection,
+  DisplaySettingsSection,
+  ReminderSettingsSection,
+  type ReminderRow,
+} from "@/components/settings/settings-sections";
 import { TelegramLinkCard } from "@/components/settings/telegram-link-card";
+import { Button } from "@/components/ui/button";
 import { requireInvitedUser } from "@/lib/auth/guard";
+import { getCalendarConnection } from "@/lib/calendar/connections";
+import { getDisplayPreferences } from "@/lib/settings/preferences";
 
 import { signOutAction } from "./logout-action";
 
@@ -10,37 +19,54 @@ type TelegramLink = {
   code_expires_at: string | null;
 };
 
-const defaultReminders = [
-  {
-    label: "Evening planning",
-    schedule: "10:00 PM",
-  },
-  {
-    label: "Morning check-in",
-    schedule: "9:00 AM",
-  },
-  {
-    label: "Weekly reset",
-    schedule: "Friday 10:15 PM",
-  },
-];
+type ReminderDefinitionRow = {
+  id: string;
+  reminder_type: ReminderRow["reminder_type"];
+  enabled: boolean;
+  local_time: string;
+  day_of_week: number | null;
+};
 
 export default async function SettingsPage() {
   const { supabase, user } = await requireInvitedUser("/settings");
 
-  const { data: telegramLink } = await supabase
-    .from("telegram_links")
-    .select("link_status,code_expires_at")
-    .eq("user_id", user.id)
-    .maybeSingle<TelegramLink>();
+  const [
+    { data: telegramLink },
+    { data: reminderRows },
+    displayPreferences,
+    calendarConnection,
+  ] = await Promise.all([
+    supabase
+      .from("telegram_links")
+      .select("link_status,code_expires_at")
+      .eq("user_id", user.id)
+      .maybeSingle<TelegramLink>(),
+    supabase
+      .from("reminder_definitions")
+      .select("id,reminder_type,enabled,local_time,day_of_week")
+      .eq("user_id", user.id)
+      .order("reminder_type"),
+    getDisplayPreferences(supabase, user.id),
+    getCalendarConnection(supabase, user.id),
+  ]);
+
+  const reminders: ReminderRow[] = ((reminderRows ?? []) as ReminderDefinitionRow[]).map(
+    (row) => ({
+      enabled: row.enabled,
+      local_time: row.local_time,
+      reminder_type: row.reminder_type,
+    }),
+  );
 
   return (
-    <main className="planner-paper min-h-screen px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-4xl flex-col gap-5">
+    <main className="min-h-screen bg-[var(--tm-surface-base)] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <header className="flex flex-col gap-1">
-          <p className="planner-accent text-sm font-semibold">Settings</p>
-          <h1 className="planner-ink text-2xl font-semibold tracking-normal">
-            Planner preferences
+          <p className="font-[var(--font-jetbrains-mono)] text-xs uppercase tracking-[0.18em] text-[var(--tm-text-muted)]">
+            Settings
+          </p>
+          <h1 className="font-[var(--font-manrope)] text-3xl font-bold text-[var(--tm-text)]">
+            Settings
           </h1>
         </header>
 
@@ -49,40 +75,15 @@ export default async function SettingsPage() {
           status={telegramLink?.link_status ?? null}
         />
 
-        <section className="planner-paper-sheet planner-rule rounded-lg border shadow-sm shadow-stone-200/60">
-          <header className="planner-divider border-b px-4 py-3">
-            <h2 className="planner-ink text-base font-semibold">Reminders</h2>
-          </header>
-          <ul className="divide-y planner-divider">
-            {defaultReminders.map((reminder) => (
-              <li
-                className="flex items-center justify-between gap-4 px-4 py-3"
-                key={reminder.label}
-              >
-                <span className="planner-ink text-sm font-medium">
-                  {reminder.label}
-                </span>
-                <span className="planner-ink-muted text-sm">
-                  {reminder.schedule}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <DisplaySettingsSection preferences={displayPreferences} />
+        <ReminderSettingsSection reminders={reminders} />
+        <CalendarSettingsSection connection={calendarConnection} />
 
-        <section className="planner-paper-sheet planner-rule rounded-lg border shadow-sm shadow-stone-200/60">
-          <header className="planner-divider border-b px-4 py-3">
-            <h2 className="planner-ink text-base font-semibold">Account</h2>
-          </header>
-          <form action={signOutAction} className="px-4 py-4">
-            <button
-              className="planner-rule planner-ink rounded-md border bg-white px-4 py-2 text-sm font-semibold transition-colors hover:bg-[#f8faf9]"
-              type="submit"
-            >
-              Sign out
-            </button>
-          </form>
-        </section>
+        <form action={signOutAction}>
+          <Button type="submit" variant="destructive">
+            Sign out
+          </Button>
+        </form>
       </div>
     </main>
   );

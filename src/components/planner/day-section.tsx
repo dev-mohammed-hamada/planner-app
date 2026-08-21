@@ -31,32 +31,37 @@ function formatDayNumber(dateISO: string) {
 
 export function DaySection({ dateISO, dayName, items }: DaySectionProps) {
   return (
-    <section className="planner-paper-sheet planner-rule flex min-h-72 flex-col rounded-lg border shadow-sm shadow-stone-200/60">
-      <header className="planner-divider flex items-baseline justify-between border-b px-4 py-3">
-        <h2 className="planner-ink text-base font-semibold">{dayName}</h2>
-        <time className="planner-ink-muted text-sm" dateTime={dateISO}>
+    <section className="flex min-h-72 flex-col rounded-lg border border-[var(--tm-rule-strong)] bg-[var(--tm-paper-elevated)] shadow-sm">
+      <header className="flex items-baseline justify-between border-b border-[var(--tm-rule)] px-4 py-2.5">
+        <h2 className="font-serif text-xl font-semibold text-[var(--tm-text)]">
+          {dayName}
+        </h2>
+        <time
+          className="text-xs font-medium uppercase tracking-wide text-[var(--tm-text-muted)]"
+          dateTime={dateISO}
+        >
           {formatDayNumber(dateISO)}
         </time>
       </header>
-      <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex flex-1 flex-col gap-3 p-3">
         {blocks.map((block) => {
           const blockItems = items.filter(
             (item) => item.item_date === dateISO && item.block === block.key,
           );
 
           return (
-            <div key={block.key} className="min-h-16">
-              <h3 className="planner-ink-muted mb-1 text-[0.7rem] font-semibold uppercase tracking-wide">
+            <div key={block.key} className="min-h-14">
+              <h3 className="mb-1 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[var(--tm-text-muted)]">
                 {block.label}
               </h3>
               {blockItems.length > 0 ? (
-                <ul className="divide-y planner-divider">
+                <ul className="divide-y divide-[var(--tm-rule)]">
                   {blockItems.map((item) => (
                     <PlannerItemRow item={item} key={item.id} />
                   ))}
                 </ul>
               ) : (
-                <div className="planner-divider h-7 border-b" />
+                <div className="h-6 border-b border-dashed border-[var(--tm-rule)]" />
               )}
             </div>
           );

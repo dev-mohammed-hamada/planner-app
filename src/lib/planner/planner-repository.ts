@@ -1,10 +1,13 @@
 import type { ParsedCapture } from "@/lib/planner/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export type CaptureSource = "telegram" | "web";
+
 export async function saveParsedCapture(
   supabase: SupabaseClient,
   userId: string,
   parsed: ParsedCapture,
+  source: CaptureSource = "telegram",
 ) {
   const { error } = await supabase.from("planner_items").insert({
     user_id: userId,
@@ -15,7 +18,7 @@ export async function saveParsedCapture(
     item_time: parsed.itemTime,
     block: parsed.block,
     bucket: parsed.bucket,
-    source: "telegram",
+    source,
   });
 
   if (error) {

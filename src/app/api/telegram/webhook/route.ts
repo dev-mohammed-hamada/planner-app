@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { captureFromText } from "@/lib/planner/capture";
 import { parseCapture } from "@/lib/planner/capture-parser";
 import { todayInTimezone } from "@/lib/planner/dates";
+import { AiParseError } from "@/lib/planner/ai-capture-parser";
 import { saveParsedCapture } from "@/lib/planner/planner-repository";
 import { createClient } from "@/lib/supabase/server";
 import { tryCompleteLinkByCode } from "@/lib/telegram/linking";
-import { captureSavedMessage, linkedMessage, sendTelegramMessage, unlinkedMessage } from "@/lib/telegram/messages";
+import {
+  aiFailureMessage,
+  captureSavedMessage,
+  linkedMessage,
+  sendTelegramMessage,
+  unlinkedMessage,
+} from "@/lib/telegram/messages";
 
 type TelegramUpdate = {
   message?: {
@@ -63,9 +71,22 @@ export async function POST(request: NextRequest) {
   }
 
   const timezone = await loadProfileTimezone(supabase, linkedUser.user_id);
-  const parsed = parseCapture(text, todayInTimezone(timezone));
-  await saveParsedCapture(supabase, linkedUser.user_id, parsed);
-  await sendTelegramMessage(chatId, captureSavedMessage());
+  const baseDateISO = todayInTimezone(timezone);
+
+  try {
+    const outcome = await captureFromText(text, baseDateISO);
+    for (const item of outcome.items) {
+      await saveParsedCapture(supabase, linkedUser.user_id, item, "telegram");
+    }
+    await sendTelegramMessage(chatId, captureSavedMessage(outcome.items.length));
+  } catch (err) {
+    if (!(err instanceof AiParseError)) {
+      throw err;
+    }
+    const fallback = parseCapture(text, baseDateISO);
+    await saveParsedCapture(supabase, linkedUser.user_id, fallback, "telegram");
+    await sendTelegramMessage(chatId, aiFailureMessage());
+  }
 
   return NextResponse.json({ ok: true });
 }

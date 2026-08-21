@@ -3,7 +3,11 @@ import { Temporal } from "@js-temporal/polyfill";
 import { WeeklySpread } from "@/components/planner/weekly-spread";
 import type { WeeklySpreadItem } from "@/components/planner/weekly-spread";
 import { requireInvitedUser } from "@/lib/auth/guard";
-import { getSaturdayWeekStart, todayInTimezone } from "@/lib/planner/dates";
+import {
+  getSaturdayWeekStart,
+  resolveWeekParam,
+  todayInTimezone,
+} from "@/lib/planner/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +15,11 @@ function weekEndDate(weekStartDate: string) {
   return Temporal.PlainDate.from(weekStartDate).add({ days: 6 }).toString();
 }
 
-export default async function PlannerPage() {
+type PlannerPageProps = {
+  searchParams: Promise<{ week?: string }>;
+};
+
+export default async function PlannerPage({ searchParams }: PlannerPageProps) {
   const { supabase, user } = await requireInvitedUser("/planner");
 
   const { data: profile } = await supabase
@@ -21,7 +29,10 @@ export default async function PlannerPage() {
     .maybeSingle();
 
   const timezone = profile?.timezone || "Asia/Gaza";
-  const weekStartDate = getSaturdayWeekStart(todayInTimezone(timezone));
+  const today = todayInTimezone(timezone);
+  const currentWeekStartDate = getSaturdayWeekStart(today);
+  const { week } = await searchParams;
+  const weekStartDate = resolveWeekParam(week, today);
   const weekEnd = weekEndDate(weekStartDate);
 
   const [{ data: plannerItems }, { data: weeklyNote }] = await Promise.all([
@@ -46,6 +57,7 @@ export default async function PlannerPage() {
 
   return (
     <WeeklySpread
+      currentWeekStartDate={currentWeekStartDate}
       items={(plannerItems ?? []) as WeeklySpreadItem[]}
       weekStartDate={weekStartDate}
       weeklyNote={weeklyNote?.content ?? ""}
